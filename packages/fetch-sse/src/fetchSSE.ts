@@ -176,28 +176,8 @@ const createSmoothMessage = (params: {
         lastFrameTime = timestamp;
         accumulatedTime += frameDuration;
 
-        let charsToProcess = 0;
         if (outputQueue.length > 0) {
-          // Smoother speed adjustment
-          const targetSpeed = Math.max(speed, outputQueue.length);
-          // Adjust speed change rate based on queue length changes
-          const speedChangeRate = Math.abs(outputQueue.length - lastQueueLength) * 0.0008 + 0.005;
-          currentSpeed += (targetSpeed - currentSpeed) * speedChangeRate;
-
-          charsToProcess = Math.floor((accumulatedTime * currentSpeed) / 1000);
-        }
-
-        if (charsToProcess > 0) {
-          accumulatedTime -= (charsToProcess * 1000) / currentSpeed;
-
-          const actualChars = Math.min(charsToProcess, outputQueue.length);
-          // actualChars = Math.min(speed, actualChars); // Speed upper limit
-
-          // if (actualChars * 2 < outputQueue.length && /[\dA-Za-z]/.test(outputQueue[actualChars])) {
-          //   actualChars *= 2;
-          // }
-
-          const charsToAdd = outputQueue.splice(0, actualChars).join('');
+          const charsToAdd = outputQueue.splice(0).join('');
           buffer += charsToAdd;
           params.onTextUpdate(charsToAdd, buffer);
         }
@@ -218,7 +198,7 @@ const createSmoothMessage = (params: {
   };
 
   const pushToQueue = (text: string) => {
-    outputQueue.push(...text.split(''));
+    outputQueue.push(text);
   };
 
   const flushQueue = () => {
