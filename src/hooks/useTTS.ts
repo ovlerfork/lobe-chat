@@ -25,6 +25,10 @@ interface TTSConfig extends TTSOptions {
   voice?: string;
 }
 
+const filterTTSContent = (content: string): string => {
+  return content.replaceAll(/```[\S\s]*?```/g, '').replaceAll('#', ' ');
+};
+
 export const useTTS = (content: string, config?: TTSConfig) => {
   const ttsSettings = useUserStore(settingsSelectors.currentTTS, isEqual);
   const ttsAgentSettings = useAgentStore(agentSelectors.currentAgentTTS, isEqual);
@@ -78,7 +82,7 @@ export const useTTS = (content: string, config?: TTSConfig) => {
     }
   }
 
-  return useSelectedTTS(content, {
+  return useSelectedTTS(filterTTSContent(content), {
     ...config,
     ...options,
     onFinish: (arraybuffers) => {
