@@ -1,0 +1,48 @@
+name: Build Patched Branch
+
+on:
+  push:
+    branches: [patchset]
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: "Upstream ref to build from"
+        required: false
+        default: "main"
+
+permissions:
+  contents: write
+
+jobs:
+  build-patched:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout patchset branch
+        uses: actions/checkout@v4
+        with:
+          ref: patchset
+          path: patchset
+          fetch-depth: 0
+
+      - name: Checkout upstream source
+        uses: actions/checkout@v4
+        with:
+          repository: lobehub/lobe-chat
+          ref: ${{ inputs.upstream_ref || 'main' }}
+          path: source
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply patches
+        working-directory: source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config rerere.enabled true
+          PATCH_DIR="$GITHUB_WORKSPACE/patchset/patches/cur" "$GITHUB_WORKSPACE/patchset/scripts/apply-patches.sh"
+
+      - name: Push patched branch
+        working-directory: source
+        run: |
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git push origin HEAD:patched --force-with-lease

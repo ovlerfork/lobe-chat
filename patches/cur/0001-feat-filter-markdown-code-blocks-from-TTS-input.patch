@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ovler Fork Automation <github.com/ovlerfork>
+Date: Sun, 14 Jun 2026 18:30:02 +0000
+Subject: [PATCH] feat: filter markdown code blocks from TTS input
+
+
+diff --git a/src/hooks/useTTS.ts b/src/hooks/useTTS.ts
+index 7485a94d45..f34e91c9ba 100644
+--- a/src/hooks/useTTS.ts
++++ b/src/hooks/useTTS.ts
+@@ -25,6 +25,10 @@ interface TTSConfig extends TTSOptions {
+   voice?: string;
+ }
+ 
++const filterTTSContent = (content: string): string => {
++  return content.replaceAll(/```[\S\s]*?```/g, '').replaceAll('#', ' ');
++};
++
+ export const useTTS = (content: string, config?: TTSConfig) => {
+   const ttsSettings = useUserStore(settingsSelectors.currentTTS, isEqual);
+   const ttsAgentSettings = useAgentStore(agentSelectors.currentAgentTTS, isEqual);
+@@ -78,7 +82,7 @@ export const useTTS = (content: string, config?: TTSConfig) => {
+     }
+   }
+ 
+-  return useSelectedTTS(content, {
++  return useSelectedTTS(filterTTSContent(content), {
+     ...config,
+     ...options,
+     onFinish: (arraybuffers) => {

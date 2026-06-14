@@ -1,0 +1,110 @@
+name: Patch Check
+
+on:
+  push:
+    branches: [patchset]
+  pull_request:
+    branches: [patchset, main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: "Upstream ref to test against"
+        required: false
+        default: "main"
+      run_full_check:
+        description: "Run pnpm install and pnpm run lint after applying patches"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  apply-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout patchset branch
+        uses: actions/checkout@v4
+        with:
+          ref: patchset
+          path: patchset
+
+      - name: Checkout upstream source
+        uses: actions/checkout@v4
+        with:
+          repository: lobehub/lobe-chat
+          ref: ${{ inputs.upstream_ref || 'main' }}
+          path: source
+          fetch-depth: 0
+
+      - name: Apply patches
+        id: apply
+        working-directory: source
+        run: |
+          git config user.name "patch-ci"
+          git config user.email "ci@localhost"
+          git config rerere.enabled true
+          FAILED=""
+          APPLIED=0
+          for patch in ../patchset/patches/cur/*.patch; do
+            NAME=$(basename "$patch")
+            echo "==== Applying: $NAME ===="
+            if ! git am --3way "$patch"; then
+              FAILED="$NAME"
+              break
+            fi
+            APPLIED=$((APPLIED + 1))
+          done
+          echo "applied=$APPLIED" >> "$GITHUB_OUTPUT"
+          if [ -n "$FAILED" ]; then
+            echo "failed_patch=$FAILED" >> "$GITHUB_OUTPUT"
+            echo "status=conflict" >> "$GITHUB_OUTPUT"
+            mkdir -p /tmp/patch-artifacts
+            git am --show-current-patch > /tmp/patch-artifacts/failed-patch.patch 2>/dev/null || true
+            git diff --name-only --diff-filter=U > /tmp/patch-artifacts/conflict-files.txt 2>/dev/null || true
+            git status --short > /tmp/patch-artifacts/git-status.txt
+            git am --abort || true
+          else
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload conflict artifacts
+        if: steps.apply.outputs.status == 'conflict'
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-conflict
+          path: /tmp/patch-artifacts/
+
+      - name: Install dependencies
+        if: steps.apply.outputs.status == 'ok' && inputs.run_full_check == 'true'
+        id: install
+        working-directory: source
+        run: pnpm install --frozen-lockfile
+        continue-on-error: true
+
+      - name: Run repository checks
+        if: steps.apply.outputs.status == 'ok' && inputs.run_full_check == 'true' && steps.install.outcome == 'success'
+        id: checks
+        working-directory: source
+        run: pnpm run lint
+        continue-on-error: true
+
+      - name: Determine result
+        id: result
+        run: |
+          if [ "${{ steps.apply.outputs.status }}" = "conflict" ]; then
+            echo "result=patch-conflict" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.run_full_check }}" = "true" ] && { [ "${{ steps.install.outcome }}" = "failure" ] || [ "${{ steps.checks.outcome }}" = "failure" ]; }; then
+            echo "result=tests-failed" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=ready" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fail if not ready
+        if: steps.result.outputs.result != 'ready'
+        run: exit 1

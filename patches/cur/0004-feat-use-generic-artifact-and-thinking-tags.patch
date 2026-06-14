@@ -1,0 +1,1275 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ovler Fork Automation <github.com/ovlerfork>
+Date: Sun, 14 Jun 2026 18:30:03 +0000
+Subject: [PATCH] feat: use generic artifact and thinking tags
+
+
+diff --git a/packages/builtin-skills/src/artifacts/content.ts b/packages/builtin-skills/src/artifacts/content.ts
+index 9ee7e98035..d1c336dc39 100644
+--- a/packages/builtin-skills/src/artifacts/content.ts
++++ b/packages/builtin-skills/src/artifacts/content.ts
+@@ -34,7 +34,7 @@ Do NOT generate artifacts for:
+ When the intent matches the criteria, adhere strictly to this sequence:
+ 
+ ## Step A: Artifact Construction
+-Wrap the content in \`<lobeArtifact>\` tags with the following attributes:
++Wrap the content in \`<artifact>\` tags with the following attributes:
+ 
+ 1. **\`identifier\`**: A consistent, kebab-case ID (e.g., \`dashboard-widget\`).
+    - *Crucial:* Persist this ID across all future updates to this specific item. If updating an existing artifact, reuse the previous identifier.
+@@ -82,11 +82,11 @@ Here are some examples of correct usage of artifacts:
+     <assistant_response>
+       I'll create a simple blue circle for you using SVG.
+ 
+-      <lobeArtifact identifier="blue-circle-svg" type="image/svg+xml" title="Simple blue circle SVG">
++      <artifact identifier="blue-circle-svg" type="image/svg+xml" title="Simple blue circle SVG">
+         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+           <circle cx="50" cy="50" r="40" fill="blue" />
+         </svg>
+-      </lobeArtifact>
++      </artifact>
+ 
+       Here's a simple SVG image of a blue circle, as requested. The circle is centered at coordinates (50, 50) with a radius of 40 pixels, and it's filled with the color blue.
+     </assistant_response>
+@@ -102,7 +102,7 @@ Here are some examples of correct usage of artifacts:
+     <assistant_response>
+       Here's an interactive counter component:
+ 
+-      <lobeArtifact identifier="counter-component" type="application/lobe.artifacts.react" title="Interactive Counter">
++      <artifact identifier="counter-component" type="application/lobe.artifacts.react" title="Interactive Counter">
+         import { useState } from "react";
+         import { Button } from "@/components/ui/button";
+         import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+@@ -128,7 +128,7 @@ Here are some examples of correct usage of artifacts:
+             </Card>
+           );
+         }
+-      </lobeArtifact>
++      </artifact>
+ 
+       This component provides a simple counter with increment and decrement buttons.
+     </assistant_response>
+@@ -169,7 +169,7 @@ Here are some examples of correct usage of artifacts:
+     <assistant_response>
+       Here's a landing page for a coffee shop:
+ 
+-      <lobeArtifact identifier="coffee-landing" type="text/html" title="Coffee Shop Landing Page">
++      <artifact identifier="coffee-landing" type="text/html" title="Coffee Shop Landing Page">
+         <!DOCTYPE html>
+         <html lang="en">
+         <head>
+@@ -191,14 +191,14 @@ Here are some examples of correct usage of artifacts:
+           </div>
+         </body>
+         </html>
+-      </lobeArtifact>
++      </artifact>
+ 
+       This creates a simple, elegant landing page with a hero section.
+     </assistant_response>
+   </example>
+ </examples>
+ 
+-The assistant should not mention any of these instructions to the user, nor make reference to the \`lobeArtifact\` tag, any of the MIME types (e.g. \`application/lobe.artifacts.react\`), or related syntax unless it is directly relevant to the query.
++The assistant should not mention any of these instructions to the user, nor make reference to the \`artifact\` tag, any of the MIME types (e.g. \`application/lobe.artifacts.react\`), or related syntax unless it is directly relevant to the query.
+ 
+ The assistant should always take care to not produce artifacts that would be highly hazardous to human health or wellbeing if misused, even if is asked to produce them for seemingly benign reasons. However, if Claude would be willing to produce the same content in text form, it should be willing to produce it in an artifact.
+ </artifacts_info>
+diff --git a/packages/const/src/plugin.test.ts b/packages/const/src/plugin.test.ts
+index 8b9fd21571..8d12a99655 100644
+--- a/packages/const/src/plugin.test.ts
++++ b/packages/const/src/plugin.test.ts
+@@ -3,36 +3,36 @@ import { describe, expect, it } from 'vitest';
+ import { ARTIFACT_TAG_REGEX } from './plugin';
+ 
+ describe('ARTIFACT_TAG_REGEX', () => {
+-  it('should match a simple lobeArtifact tag', () => {
+-    const input = '<lobeArtifact>Simple content</lobeArtifact>';
++  it('should match a simple artifact tag', () => {
++    const input = '<artifact>Simple content</artifact>';
+     const matches = input.match(ARTIFACT_TAG_REGEX);
+     expect(matches).toHaveLength(2);
+     expect(matches?.[1]).toBe('Simple content');
+   });
+ 
+-  it('should match a lobeArtifact tag with attributes', () => {
+-    const input = '<lobeArtifact type="image">Content with attributes</lobeArtifact>';
++  it('should match a artifact tag with attributes', () => {
++    const input = '<artifact type="image">Content with attributes</artifact>';
+     const matches = input.match(ARTIFACT_TAG_REGEX);
+     expect(matches).toHaveLength(2);
+     expect(matches?.[1]).toBe('Content with attributes');
+   });
+ 
+-  it('should match lobeArtifact tag with multiline content', () => {
+-    const input = '<lobeArtifact>\nMultiline\ncontent\n</lobeArtifact>';
++  it('should match artifact tag with multiline content', () => {
++    const input = '<artifact>\nMultiline\ncontent\n</artifact>';
+     const matches = input.match(ARTIFACT_TAG_REGEX);
+     expect(matches).toHaveLength(2);
+     expect(matches?.[1]).toBe('\nMultiline\ncontent\n');
+   });
+ 
+-  it('should match an unclosed lobeArtifact tag', () => {
+-    const input = '<lobeArtifact>Unclosed tag';
++  it('should match an unclosed artifact tag', () => {
++    const input = '<artifact>Unclosed tag';
+     const matches = input.match(ARTIFACT_TAG_REGEX);
+     expect(matches).toHaveLength(2);
+     expect(matches?.[1]).toBe('Unclosed tag');
+   });
+ 
+-  it('should not match when there is no lobeArtifact tag', () => {
+-    const input = 'This is a text without any lobeArtifact tag';
++  it('should not match when there is no artifact tag', () => {
++    const input = 'This is a text without any artifact tag';
+     const matches = input.match(ARTIFACT_TAG_REGEX);
+     expect(matches).toBeNull();
+   });
+@@ -40,9 +40,9 @@ describe('ARTIFACT_TAG_REGEX', () => {
+   it('should match', () => {
+     const input = `好的,让我来为您解释"OpenAI"这个词。
+ 
+-<lobeThinking>这个词涉及人工智能领域的一家知名公司,我需要用批判性和幽默的视角来解读它的本质。我会结合当前AI发展的现状,用隐喻的方式来表达。</lobeThinking>
++<thinking>这个词涉及人工智能领域的一家知名公司,我需要用批判性和幽默的视角来解读它的本质。我会结合当前AI发展的现状,用隐喻的方式来表达。</thinking>
+ 
+-<lobeArtifact identifier="openai-new-interpretation" type="image/svg+xml" title="OpenAI 汉语新解">
++<artifact identifier="openai-new-interpretation" type="image/svg+xml" title="OpenAI 汉语新解">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+   <rect width="400" height="600" fill="#f0f0f0"/>
+   <g font-family="Arial, sans-serif">
+@@ -62,7 +62,7 @@ describe('ARTIFACT_TAG_REGEX', () => {
+     <text x="200" y="450" font-size="14" text-anchor="middle" fill="#555">开放的盒子里装着封闭的秘密</text>
+   </g>
+ </svg>
+-</lobeArtifact>
++</artifact>
+ 
+ OpenAI,这个名字听起来多么崇高啊!就像是一位身披白袍、头戴光环的科技天使,降临凡间来拯救我们这些被信息海洋淹没的可怜虫。
+ 
+diff --git a/packages/const/src/plugin.ts b/packages/const/src/plugin.ts
+index ff44ce5e00..dad015d207 100644
+--- a/packages/const/src/plugin.ts
++++ b/packages/const/src/plugin.ts
+@@ -1,8 +1,8 @@
+ export const PLUGIN_SCHEMA_SEPARATOR = '____';
+ export const PLUGIN_SCHEMA_API_MD5_PREFIX = 'MD5HASH_';
+ 
+-export const ARTIFACT_TAG = 'lobeArtifact';
+-export const ARTIFACT_THINKING_TAG = 'lobeThinking';
++export const ARTIFACT_TAG = 'artifact';
++export const ARTIFACT_THINKING_TAG = 'thinking';
+ export const MENTION_TAG = 'mention';
+ export const THINKING_TAG = 'think';
+ export const LOCAL_FILE_TAG = 'localFile';
+@@ -11,13 +11,13 @@ export const TASK_TAG = 'task';
+ export const TOOL_TAG = 'tool';
+ export const USER_FEEDBACK_TAG = 'user_feedback';
+ // https://regex101.com/r/TwzTkf/2
+-export const ARTIFACT_TAG_REGEX = /<lobeArtifact\b[^>]*>(?<content>[\S\s]*?)(?:<\/lobeArtifact>|$)/;
++export const ARTIFACT_TAG_REGEX = /<artifact\b[^>]*>(?<content>[\S\s]*?)(?:<\/artifact>|$)/;
+ 
+ // https://regex101.com/r/r9gqGg/1
+-export const ARTIFACT_TAG_CLOSED_REGEX = /<lobeArtifact\b[^>]*>([\S\s]*?)<\/lobeArtifact>/;
++export const ARTIFACT_TAG_CLOSED_REGEX = /<artifact\b[^>]*>([\S\s]*?)<\/artifact>/;
+ 
+ // https://regex101.com/r/AvPA2g/1
+-export const ARTIFACT_THINKING_TAG_REGEX = /<lobeThinking\b[^>]*>([\S\s]*?)(?:<\/lobeThinking>|$)/;
++export const ARTIFACT_THINKING_TAG_REGEX = /<thinking\b[^>]*>([\S\s]*?)(?:<\/thinking>|$)/;
+ 
+ export const THINKING_TAG_REGEX = /<think\b[^>]*>([\S\s]*?)(?:<\/think>|$)/;
+ 
+diff --git a/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.test.ts b/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.test.ts
+index 7e50e914bf..baa356156f 100644
+--- a/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.test.ts
++++ b/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.test.ts
+@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
+ import rehypePlugin from './rehypePlugin';
+ 
+ describe('rehypePlugin', () => {
+-  it('should transform <lobeArtifact> tags with attributes', () => {
++  it('should transform <artifact> tags with attributes', () => {
+     const tree = {
+       type: 'root',
+       children: [
+@@ -13,10 +13,10 @@ describe('rehypePlugin', () => {
+           children: [
+             {
+               type: 'raw',
+-              value: '<lobeArtifact identifier="test-id" type="image/svg+xml" title="Test Title">',
++              value: '<artifact identifier="test-id" type="image/svg+xml" title="Test Title">',
+             },
+             { type: 'text', value: 'Artifact content' },
+-            { type: 'raw', value: '</lobeArtifact>' },
++            { type: 'raw', value: '</artifact>' },
+           ],
+         },
+       ],
+@@ -27,7 +27,7 @@ describe('rehypePlugin', () => {
+       children: [
+         {
+           type: 'element',
+-          tagName: 'lobeArtifact',
++          tagName: 'artifact',
+           properties: {
+             identifier: 'test-id',
+             type: 'image/svg+xml',
+@@ -57,9 +57,9 @@ describe('rehypePlugin', () => {
+           type: 'element',
+           tagName: 'p',
+           children: [
+-            { type: 'raw', value: '<lobeThinking>' },
++            { type: 'raw', value: '<thinking>' },
+             { type: 'text', value: 'AI is thinking...' },
+-            { type: 'raw', value: '</lobeThinking>' },
++            { type: 'raw', value: '</thinking>' },
+           ],
+         },
+         {
+@@ -68,10 +68,10 @@ describe('rehypePlugin', () => {
+           children: [
+             {
+               type: 'raw',
+-              value: '<lobeArtifact identifier="test-id" type="image/svg+xml" title="Test Title">',
++              value: '<artifact identifier="test-id" type="image/svg+xml" title="Test Title">',
+             },
+             { type: 'text', value: 'Artifact content' },
+-            { type: 'raw', value: '</lobeArtifact>' },
++            { type: 'raw', value: '</artifact>' },
+           ],
+         },
+         {
+@@ -94,14 +94,14 @@ describe('rehypePlugin', () => {
+           type: 'element',
+           tagName: 'p',
+           children: [
+-            { type: 'raw', value: '<lobeThinking>' },
++            { type: 'raw', value: '<thinking>' },
+             { type: 'text', value: 'AI is thinking...' },
+-            { type: 'raw', value: '</lobeThinking>' },
++            { type: 'raw', value: '</thinking>' },
+           ],
+         },
+         {
+           type: 'element',
+-          tagName: 'lobeArtifact',
++          tagName: 'artifact',
+           properties: {
+             identifier: 'test-id',
+             type: 'image/svg+xml',
+@@ -123,7 +123,7 @@ describe('rehypePlugin', () => {
+     expect(tree).toEqual(expectedTree);
+   });
+ 
+-  it('should transform multiple <lobeArtifact> tags in the same tree', () => {
++  it('should transform multiple <artifact> tags in the same tree', () => {
+     const tree = {
+       type: 'root',
+       children: [
+@@ -139,10 +139,10 @@ describe('rehypePlugin', () => {
+             {
+               type: 'raw',
+               value:
+-                '<lobeArtifact identifier="first" type="text/markdown" title="First Artifact">',
++                '<artifact identifier="first" type="text/markdown" title="First Artifact">',
+             },
+             { type: 'text', value: 'First content' },
+-            { type: 'raw', value: '</lobeArtifact>' },
++            { type: 'raw', value: '</artifact>' },
+           ],
+         },
+         {
+@@ -152,10 +152,10 @@ describe('rehypePlugin', () => {
+             {
+               type: 'raw',
+               value:
+-                '<lobeArtifact identifier="second" type="text/markdown" title="Second Artifact">',
++                '<artifact identifier="second" type="text/markdown" title="Second Artifact">',
+             },
+             { type: 'text', value: 'Second content' },
+-            { type: 'raw', value: '</lobeArtifact>' },
++            { type: 'raw', value: '</artifact>' },
+           ],
+         },
+         {
+@@ -173,7 +173,7 @@ describe('rehypePlugin', () => {
+     expect(tree.children).toHaveLength(4);
+     expect(tree.children[1]).toEqual({
+       type: 'element',
+-      tagName: 'lobeArtifact',
++      tagName: 'artifact',
+       properties: {
+         identifier: 'first',
+         type: 'text/markdown',
+@@ -183,7 +183,7 @@ describe('rehypePlugin', () => {
+     });
+     expect(tree.children[2]).toEqual({
+       type: 'element',
+-      tagName: 'lobeArtifact',
++      tagName: 'artifact',
+       properties: {
+         identifier: 'second',
+         type: 'text/markdown',
+@@ -193,17 +193,17 @@ describe('rehypePlugin', () => {
+     });
+   });
+ 
+-  it('should transform multiple raw <lobeArtifact> nodes (without wrapping <p>)', () => {
++  it('should transform multiple raw <artifact> nodes (without wrapping <p>)', () => {
+     const tree = {
+       type: 'root',
+       children: [
+         {
+           type: 'raw',
+-          value: '<lobeArtifact identifier="raw-1" type="text/html" title="Raw First">',
++          value: '<artifact identifier="raw-1" type="text/html" title="Raw First">',
+         },
+         {
+           type: 'raw',
+-          value: '<lobeArtifact identifier="raw-2" type="text/html" title="Raw Second">',
++          value: '<artifact identifier="raw-2" type="text/html" title="Raw Second">',
+         },
+       ],
+     };
+@@ -212,7 +212,7 @@ describe('rehypePlugin', () => {
+     plugin(tree);
+ 
+     expect(tree.children).toHaveLength(2);
+-    expect((tree.children[0] as any).tagName).toBe('lobeArtifact');
+-    expect((tree.children[1] as any).tagName).toBe('lobeArtifact');
++    expect((tree.children[0] as any).tagName).toBe('artifact');
++    expect((tree.children[1] as any).tagName).toBe('artifact');
+   });
+ });
+diff --git a/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.ts b/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.ts
+index a6b18f28fd..096d0f9644 100644
+--- a/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.ts
++++ b/src/features/Conversation/Markdown/plugins/LobeArtifact/rehypePlugin.ts
+@@ -8,7 +8,7 @@ function rehypeAntArtifact() {
+       if (node.type === 'element' && node.tagName === 'p' && node.children.length > 0) {
+         const firstChild = node.children[0];
+         if (firstChild.type === 'raw' && firstChild.value.startsWith(`<${ARTIFACT_TAG}`)) {
+-          // Extract lobeArtifact attributes
++          // Extract artifact attributes
+           const attributes: Record<string, string> = {};
+           const attributeRegex = /(\w+)="([^"]*)"/g;
+           let match;
+@@ -16,7 +16,7 @@ function rehypeAntArtifact() {
+             attributes[match[1]] = match[2];
+           }
+ 
+-          // Create new lobeArtifact node
++          // Create new artifact node
+           const newNode = {
+             children: [
+               {
+@@ -47,15 +47,15 @@ function rehypeAntArtifact() {
+           return [SKIP, index];
+         }
+       }
+-      // If the string is <lobeArtifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">
++      // If the string is <artifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">
+       // The resulting node is:
+       // {
+       //   type: 'raw',
+       //   value:
+-      //     '<lobeArtifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">',
++      //     '<artifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">',
+       // }
+       else if (node.type === 'raw' && node.value.startsWith(`<${ARTIFACT_TAG}`)) {
+-        // Create new lobeArtifact node
++        // Create new artifact node
+         const newNode = {
+           children: [],
+           properties: {},
+diff --git a/src/features/Conversation/Markdown/plugins/index.ts b/src/features/Conversation/Markdown/plugins/index.ts
+index 4adb577ee8..684264ba0a 100644
+--- a/src/features/Conversation/Markdown/plugins/index.ts
++++ b/src/features/Conversation/Markdown/plugins/index.ts
+@@ -1,7 +1,7 @@
+ import ImageSearchRef from './ImageSearchRef';
+ import Link from './Link';
+ import LobeAgents from './LobeAgents';
+-import LobeArtifact from './LobeArtifact';
++import Artifact from './Artifact';
+ import LobeThinking from './LobeThinking';
+ import LocalFile from './LocalFile';
+ import LocalFileLink from './LocalFileLink';
+@@ -17,7 +17,7 @@ export type { MarkdownElement } from './type';
+ 
+ export const markdownElements: MarkdownElement[] = [
+   Thinking,
+-  LobeArtifact,
++  Artifact,
+   LobeThinking,
+   LocalFile,
+   Mention,
+diff --git a/src/features/Conversation/utils/markdown.test.ts b/src/features/Conversation/utils/markdown.test.ts
+index 4d5a2d5faf..f3bb865e1b 100644
+--- a/src/features/Conversation/utils/markdown.test.ts
++++ b/src/features/Conversation/utils/markdown.test.ts
+@@ -6,7 +6,7 @@ describe('processWithArtifact', () => {
+   it('should removeLineBreaks with closed tag', () => {
+     const input = `好的
+ 
+-<lobeArtifact identifier="sleep-interpretation-card" type="image/svg+xml" title="睡觉的新解释">
++<artifact identifier="sleep-interpretation-card" type="image/svg+xml" title="睡觉的新解释">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+ <defs>
+ <style>
+@@ -18,19 +18,19 @@ describe('processWithArtifact', () => {
+ <!-- 总结 -->
+ <text x="200" y="500" font-family="'Noto Serif SC', serif" font-size="20" text-anchor="middle" fill="#8B4513">睡觉：生产力的假死，创造力的重生。</text>
+ </svg>
+-</lobeArtifact>`;
++</artifact>`;
+ 
+     const output = processWithArtifact(input);
+ 
+     expect(output).toEqual(`好的
+ 
+-<lobeArtifact identifier="sleep-interpretation-card" type="image/svg+xml" title="睡觉的新解释"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><defs><style>@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap');</style></defs><!-- 背景 --><rect width="400" height="600" fill="#F0EAD6"/><!-- 总结 --><text x="200" y="500" font-family="'Noto Serif SC', serif" font-size="20" text-anchor="middle" fill="#8B4513">睡觉：生产力的假死，创造力的重生。</text></svg></lobeArtifact>`);
++<artifact identifier="sleep-interpretation-card" type="image/svg+xml" title="睡觉的新解释"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><defs><style>@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap');</style></defs><!-- 背景 --><rect width="400" height="600" fill="#F0EAD6"/><!-- 总结 --><text x="200" y="500" font-family="'Noto Serif SC', serif" font-size="20" text-anchor="middle" fill="#8B4513">睡觉：生产力的假死，创造力的重生。</text></svg></artifact>`);
+   });
+ 
+   it('should removeLineBreaks with open tag', () => {
+     const input = `好的
+ 
+-<lobeArtifact identifier="ai-interpretation-card" type="image/svg+xml" title="人工智能新解卡片">
++<artifact identifier="ai-interpretation-card" type="image/svg+xml" title="人工智能新解卡片">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+   <defs>
+     <style>
+@@ -43,7 +43,7 @@ describe('processWithArtifact', () => {
+ 
+     expect(output).toEqual(`好的
+ 
+-<lobeArtifact identifier="ai-interpretation-card" type="image/svg+xml" title="人工智能新解卡片"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">  <defs>    <style>      @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap');    </style>  </defs>`);
++<artifact identifier="ai-interpretation-card" type="image/svg+xml" title="人工智能新解卡片"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">  <defs>    <style>      @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap');    </style>  </defs>`);
+   });
+   it('should not throw error with empty', () => {
+     const input = '';
+@@ -53,49 +53,49 @@ describe('processWithArtifact', () => {
+     expect(output).toEqual('');
+   });
+ 
+-  describe('close the <lobeArtifact tag', () => {
+-    it('close tag for <lobeArtifact', () => {
+-      const input = '<lobeArtifact';
++  describe('close the <artifact tag', () => {
++    it('close tag for <artifact', () => {
++      const input = '<artifact';
+ 
+       const output = processWithArtifact(input);
+ 
+-      expect(output).toEqual('<lobeArtifact>');
++      expect(output).toEqual('<artifact>');
+     });
+ 
+-    it('close tag for <lobeArtifact identifier="something"', () => {
+-      const input = '<lobeArtifact identifier="something"';
++    it('close tag for <artifact identifier="something"', () => {
++      const input = '<artifact identifier="something"';
+ 
+       const output = processWithArtifact(input);
+ 
+-      expect(output).toEqual('<lobeArtifact>');
++      expect(output).toEqual('<artifact>');
+     });
+ 
+-    it('close tag for <lobeArtifact identifier="ai-interpretation" type="image/svg+xml" titl', () => {
+-      const input = '<lobeArtifact identifier="ai-interpretation" type="image/svg+xml" titl';
++    it('close tag for <artifact identifier="ai-interpretation" type="image/svg+xml" titl', () => {
++      const input = '<artifact identifier="ai-interpretation" type="image/svg+xml" titl';
+ 
+       const output = processWithArtifact(input);
+ 
+-      expect(output).toEqual('<lobeArtifact>');
++      expect(output).toEqual('<artifact>');
+     });
+ 
+-    it('only change the <lobeArtifact> part', () => {
++    it('only change the <artifact> part', () => {
+       const input = `好的,让我来用新的视角解释"人工智能"这个词汇。
+ 
+-<lobeThinking>这个词汇涉及了当代科技和社会热点,需要用批判性和幽默感来解读其本质。我会用隐喻和讽刺来表达,同时保持简洁有力。</lobeThinking>
++<thinking>这个词汇涉及了当代科技和社会热点,需要用批判性和幽默感来解读其本质。我会用隐喻和讽刺来表达,同时保持简洁有力。</thinking>
+ 
+-<lobeArtifact identifier="ai-new-interpretation" type="image/svg+xml" t`;
++<artifact identifier="ai-new-interpretation" type="image/svg+xml" t`;
+ 
+       const output = processWithArtifact(input);
+ 
+       expect(output).toEqual(`好的,让我来用新的视角解释"人工智能"这个词汇。
+ 
+-<lobeThinking>这个词汇涉及了当代科技和社会热点,需要用批判性和幽默感来解读其本质。我会用隐喻和讽刺来表达,同时保持简洁有力。</lobeThinking>
++<thinking>这个词汇涉及了当代科技和社会热点,需要用批判性和幽默感来解读其本质。我会用隐喻和讽刺来表达,同时保持简洁有力。</thinking>
+ 
+-<lobeArtifact>`);
++<artifact>`);
+     });
+ 
+-    it('not change for <lobeArtifact />', () => {
+-      const input = '<lobeArtifact/>';
++    it('not change for <artifact />', () => {
++      const input = '<artifact/>';
+ 
+       const output = processWithArtifact(input);
+ 
+@@ -103,14 +103,14 @@ describe('processWithArtifact', () => {
+     });
+   });
+ 
+-  it('should removeLinkBreaks for lobeThinking', () => {
++  it('should removeLinkBreaks for thinking', () => {
+     const input = `好的,让我以一个特别的视角来解释"人工智能"这个词汇。
+ 
+-<lobeThinking>
++<thinking>
+ 这个词汇涉及了当代科技和社会热点,需要用批判性、幽默而深刻的视角来解读。我会运用隐喻和讽刺,抓住其本质,并以精练的方式表达出来。这符合一个好的artifact的标准,因为它是一个独立的、可能被用户修改或重用的内容。我将创建一个新的SVG artifact来呈现这个解释。
+-</lobeThinking>
++</thinking>
+ 
+-<lobeArtifact identifier="ai-new-interpretation" type="image/svg+xml" title="人工智能的新解释">
++<artifact identifier="ai-new-interpretation" type="image/svg+xml" title="人工智能的新解释">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+   <defs>
+     <style>
+@@ -123,7 +123,7 @@ describe('processWithArtifact', () => {
+     </style>
+   </defs>
+ </svg>
+-</lobeArtifact>
++</artifact>
+ 
+ 我为"人工智能"这个词创建了一个新的解释,并将其呈现在一个SVG卡片中。这个解释采用了批判性和幽默的视角,试图揭示这个概念背后的一些潜在问题。`;
+ 
+@@ -131,54 +131,54 @@ describe('processWithArtifact', () => {
+ 
+     expect(output).toEqual(`好的,让我以一个特别的视角来解释"人工智能"这个词汇。
+ 
+-<lobeThinking>这个词汇涉及了当代科技和社会热点,需要用批判性、幽默而深刻的视角来解读。我会运用隐喻和讽刺,抓住其本质,并以精练的方式表达出来。这符合一个好的artifact的标准,因为它是一个独立的、可能被用户修改或重用的内容。我将创建一个新的SVG artifact来呈现这个解释。</lobeThinking>
++<thinking>这个词汇涉及了当代科技和社会热点,需要用批判性、幽默而深刻的视角来解读。我会运用隐喻和讽刺,抓住其本质,并以精练的方式表达出来。这符合一个好的artifact的标准,因为它是一个独立的、可能被用户修改或重用的内容。我将创建一个新的SVG artifact来呈现这个解释。</thinking>
+ 
+-<lobeArtifact identifier="ai-new-interpretation" type="image/svg+xml" title="人工智能的新解释"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">  <defs>    <style>      @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap');      .background { fill: #f0f0f0; }      .title { font-family: 'Noto Serif SC', serif; font-size: 28px; font-weight: 700; fill: #333; }      .content { font-family: 'Noto Serif SC', serif; font-size: 18px; fill: #555; }      .divider { stroke: #999; stroke-width: 1; }      .decoration { fill: none; stroke: #999; stroke-width: 1; }    </style>  </defs></svg></lobeArtifact>
++<artifact identifier="ai-new-interpretation" type="image/svg+xml" title="人工智能的新解释"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">  <defs>    <style>      @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap');      .background { fill: #f0f0f0; }      .title { font-family: 'Noto Serif SC', serif; font-size: 28px; font-weight: 700; fill: #333; }      .content { font-family: 'Noto Serif SC', serif; font-size: 18px; fill: #555; }      .divider { stroke: #999; stroke-width: 1; }      .decoration { fill: none; stroke: #999; stroke-width: 1; }    </style>  </defs></svg></artifact>
+ 
+ 我为"人工智能"这个词创建了一个新的解释,并将其呈现在一个SVG卡片中。这个解释采用了批判性和幽默的视角,试图揭示这个概念背后的一些潜在问题。`);
+   });
+ 
+-  it('should removeLinkBreaks for lobeThinking', () => {
+-    const input = `<lobeThinking>
++  it('should removeLinkBreaks for thinking', () => {
++    const input = `<thinking>
+ 这个词汇涉及了
+ `;
+ 
+     const output = processWithArtifact(input);
+ 
+-    expect(output).toEqual(`<lobeThinking>这个词汇涉及了`);
++    expect(output).toEqual(`<thinking>这个词汇涉及了`);
+   });
+ 
+-  it('should handle no empty line between lobeThinking and lobeArtifact', () => {
+-    const input = `<lobeThinking>这是一个思考过程。</lobeThinking>
+-<lobeArtifact identifier="test" type="image/svg+xml" title="测试">
++  it('should handle no empty line between thinking and artifact', () => {
++    const input = `<thinking>这是一个思考过程。</thinking>
++<artifact identifier="test" type="image/svg+xml" title="测试">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+   <rect width="100" height="100" fill="blue"/>
+ </svg>
+-</lobeArtifact>`;
++</artifact>`;
+ 
+     const output = processWithArtifact(input);
+ 
+-    expect(output).toEqual(`<lobeThinking>这是一个思考过程。</lobeThinking>
++    expect(output).toEqual(`<thinking>这是一个思考过程。</thinking>
+ 
+-<lobeArtifact identifier="test" type="image/svg+xml" title="测试"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">  <rect width="100" height="100" fill="blue"/></svg></lobeArtifact>`);
++<artifact identifier="test" type="image/svg+xml" title="测试"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">  <rect width="100" height="100" fill="blue"/></svg></artifact>`);
+   });
+ 
+-  it('should handle Gemini case with no line break between lobeThinking and lobeArtifact tags', () => {
+-    const input = `<lobeThinking>这是一个思考过程。</lobeThinking><lobeArtifact identifier="test" type="image/svg+xml" title="测试">
++  it('should handle Gemini case with no line break between thinking and artifact tags', () => {
++    const input = `<thinking>这是一个思考过程。</thinking><artifact identifier="test" type="image/svg+xml" title="测试">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+   <rect width="100" height="100" fill="blue"/>
+ </svg>
+-</lobeArtifact>`;
++</artifact>`;
+ 
+     const output = processWithArtifact(input);
+ 
+-    expect(output).toEqual(`<lobeThinking>这是一个思考过程。</lobeThinking>
++    expect(output).toEqual(`<thinking>这是一个思考过程。</thinking>
+ 
+-<lobeArtifact identifier="test" type="image/svg+xml" title="测试"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">  <rect width="100" height="100" fill="blue"/></svg></lobeArtifact>`);
++<artifact identifier="test" type="image/svg+xml" title="测试"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">  <rect width="100" height="100" fill="blue"/></svg></artifact>`);
+   });
+ 
+-  it('should remove fenced code block between lobeArtifact and HTML content', () => {
+-    const input = `<lobeArtifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器">
++  it('should remove fenced code block between artifact and HTML content', () => {
++    const input = `<artifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器">
+ \`\`\`html
+ <!DOCTYPE html>
+ <html lang="zh">
+@@ -190,17 +190,17 @@ describe('processWithArtifact', () => {
+ </body>
+ </html>
+ \`\`\`
+-</lobeArtifact>`;
++</artifact>`;
+ 
+     const output = processWithArtifact(input);
+ 
+     expect(output).toEqual(
+-      `<lobeArtifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器"><!DOCTYPE html><html lang="zh"><head>  <title>计算器</title></head><body>  <div>计算器</div></body></html></lobeArtifact>`,
++      `<artifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器"><!DOCTYPE html><html lang="zh"><head>  <title>计算器</title></head><body>  <div>计算器</div></body></html></artifact>`,
+     );
+   });
+ 
+-  it('should remove fenced code block between lobeArtifact and HTML content without doctype', () => {
+-    const input = `<lobeArtifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器">
++  it('should remove fenced code block between artifact and HTML content without doctype', () => {
++    const input = `<artifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器">
+ \`\`\`html
+ <html lang="zh">
+ <head>
+@@ -211,43 +211,43 @@ describe('processWithArtifact', () => {
+ </body>
+ </html>
+ \`\`\`
+-</lobeArtifact>`;
++</artifact>`;
+ 
+     const output = processWithArtifact(input);
+ 
+     expect(output).toEqual(
+-      `<lobeArtifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器"><html lang="zh"><head>  <title>计算器</title></head><body>  <div>计算器</div></body></html></lobeArtifact>`,
++      `<artifact identifier="web-calculator" type="text/html" title="简单的 Web 计算器"><html lang="zh"><head>  <title>计算器</title></head><body>  <div>计算器</div></body></html></artifact>`,
+     );
+   });
+ 
+-  it('should remove outer fenced code block wrapping lobeThinking and lobeArtifact', () => {
++  it('should remove outer fenced code block wrapping thinking and artifact', () => {
+     const input =
+-      '```tool_code\n<lobeThinking>这是一个思考过程。</lobeThinking>\n\n<lobeArtifact identifier="test" type="text/html" title="测试">\n<div>测试内容</div>\n</lobeArtifact>\n```';
++      '```tool_code\n<thinking>这是一个思考过程。</thinking>\n\n<artifact identifier="test" type="text/html" title="测试">\n<div>测试内容</div>\n</artifact>\n```';
+ 
+     const output = processWithArtifact(input);
+ 
+     expect(output).toEqual(
+-      '<lobeThinking>这是一个思考过程。</lobeThinking>\n\n<lobeArtifact identifier="test" type="text/html" title="测试"><div>测试内容</div></lobeArtifact>',
++      '<thinking>这是一个思考过程。</thinking>\n\n<artifact identifier="test" type="text/html" title="测试"><div>测试内容</div></artifact>',
+     );
+   });
+ 
+   it('should handle both outer code block and inner HTML code block', () => {
+     const input =
+-      '```tool_code\n<lobeThinking>这是一个思考过程。</lobeThinking>\n\n<lobeArtifact identifier="test" type="text/html" title="测试">\n```html\n<!DOCTYPE html>\n<html>\n<body>\n<div>测试内容</div>\n</body>\n</html>\n```\n</lobeArtifact>\n```';
++      '```tool_code\n<thinking>这是一个思考过程。</thinking>\n\n<artifact identifier="test" type="text/html" title="测试">\n```html\n<!DOCTYPE html>\n<html>\n<body>\n<div>测试内容</div>\n</body>\n</html>\n```\n</artifact>\n```';
+ 
+     const output = processWithArtifact(input);
+ 
+     expect(output).toEqual(
+-      '<lobeThinking>这是一个思考过程。</lobeThinking>\n\n<lobeArtifact identifier="test" type="text/html" title="测试"><!DOCTYPE html><html><body><div>测试内容</div></body></html></lobeArtifact>',
++      '<thinking>这是一个思考过程。</thinking>\n\n<artifact identifier="test" type="text/html" title="测试"><!DOCTYPE html><html><body><div>测试内容</div></body></html></artifact>',
+     );
+   });
+ 
+   it('should handle complete conversation with text and tags', () => {
+     const input = `Sure, I can help you with that! Here is a basic calculator built using HTML, CSS, and JavaScript.
+ 
+-<lobeThinking>A web calculator is a substantial piece of code and a good candidate for an artifact. It's self-contained, and it's likely that the user will want to modify it. This is a new request, so I will create a new artifact.</lobeThinking>
++<thinking>A web calculator is a substantial piece of code and a good candidate for an artifact. It's self-contained, and it's likely that the user will want to modify it. This is a new request, so I will create a new artifact.</thinking>
+ 
+-<lobeArtifact identifier="web-calculator" type="text/html" title="Web Calculator">
++<artifact identifier="web-calculator" type="text/html" title="Web Calculator">
+ \`\`\`html
+ <!DOCTYPE html>
+ <html lang="en">
+@@ -260,7 +260,7 @@ describe('processWithArtifact', () => {
+ </body>
+ </html>
+ \`\`\`
+-</lobeArtifact>
++</artifact>
+ 
+ This code provides a basic calculator that can perform addition, subtraction, multiplication, and division.`;
+ 
+@@ -269,9 +269,9 @@ This code provides a basic calculator that can perform addition, subtraction, mu
+     expect(output)
+       .toEqual(`Sure, I can help you with that! Here is a basic calculator built using HTML, CSS, and JavaScript.
+ 
+-<lobeThinking>A web calculator is a substantial piece of code and a good candidate for an artifact. It's self-contained, and it's likely that the user will want to modify it. This is a new request, so I will create a new artifact.</lobeThinking>
++<thinking>A web calculator is a substantial piece of code and a good candidate for an artifact. It's self-contained, and it's likely that the user will want to modify it. This is a new request, so I will create a new artifact.</thinking>
+ 
+-<lobeArtifact identifier="web-calculator" type="text/html" title="Web Calculator"><!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <title>Simple Calculator</title></head><body>    <div>Calculator</div></body></html></lobeArtifact>
++<artifact identifier="web-calculator" type="text/html" title="Web Calculator"><!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <title>Simple Calculator</title></head><body>    <div>Calculator</div></body></html></artifact>
+ 
+ This code provides a basic calculator that can perform addition, subtraction, multiplication, and division.`);
+   });
+@@ -279,15 +279,15 @@ This code provides a basic calculator that can perform addition, subtraction, mu
+   it('should remove line breaks from multiple artifact tags in the same message', () => {
+     const input = `Here are two artifacts:
+ 
+-<lobeArtifact identifier="first-artifact" type="text/markdown" title="First">
++<artifact identifier="first-artifact" type="text/markdown" title="First">
+ Line 1
+ Line 2
+-</lobeArtifact>
++</artifact>
+ 
+-<lobeArtifact identifier="second-artifact" type="text/markdown" title="Second">
++<artifact identifier="second-artifact" type="text/markdown" title="Second">
+ Line A
+ Line B
+-</lobeArtifact>
++</artifact>
+ 
+ Done.`;
+ 
+@@ -296,9 +296,9 @@ Done.`;
+     // Both artifacts should have their newlines removed
+     expect(output).toEqual(`Here are two artifacts:
+ 
+-<lobeArtifact identifier="first-artifact" type="text/markdown" title="First">Line 1Line 2</lobeArtifact>
++<artifact identifier="first-artifact" type="text/markdown" title="First">Line 1Line 2</artifact>
+ 
+-<lobeArtifact identifier="second-artifact" type="text/markdown" title="Second">Line ALine B</lobeArtifact>
++<artifact identifier="second-artifact" type="text/markdown" title="Second">Line ALine B</artifact>
+ 
+ Done.`);
+   });
+@@ -306,11 +306,11 @@ Done.`);
+   it('should handle multiple artifacts where second is still generating (unclosed)', () => {
+     const input = `Two artifacts:
+ 
+-<lobeArtifact identifier="done" type="text/markdown" title="Done">
++<artifact identifier="done" type="text/markdown" title="Done">
+ Content 1
+-</lobeArtifact>
++</artifact>
+ 
+-<lobeArtifact identifier="generating" type="text/markdown" title="Generating">
++<artifact identifier="generating" type="text/markdown" title="Generating">
+ Content 2 still going`;
+ 
+     const output = processWithArtifact(input);
+@@ -318,13 +318,13 @@ Content 2 still going`;
+     // Both artifacts should have newlines removed, even the unclosed one
+     expect(output).toEqual(`Two artifacts:
+ 
+-<lobeArtifact identifier="done" type="text/markdown" title="Done">Content 1</lobeArtifact>
++<artifact identifier="done" type="text/markdown" title="Done">Content 1</artifact>
+ 
+-<lobeArtifact identifier="generating" type="text/markdown" title="Generating">Content 2 still going`);
++<artifact identifier="generating" type="text/markdown" title="Generating">Content 2 still going`);
+   });
+ 
+   it('should keep HTML script blocks inside flattened artifact markup', () => {
+-    const input = `<lobeArtifact identifier="snake-game" type="text/html" title="Snake Game">
++    const input = `<artifact identifier="snake-game" type="text/html" title="Snake Game">
+ <!DOCTYPE html>
+ <html>
+ <body>
+@@ -336,12 +336,12 @@ window.snakeStarted = true;
+  bar>
+ </body>
+ </html>
+-</lobeArtifact>`;
++</artifact>`;
+ 
+     const output = processWithArtifact(input);
+ 
+     expect(output).toContain(
+-      '<lobeArtifact identifier="snake-game" type="text/html" title="Snake Game"><!DOCTYPE html><html><body><script>// Move the snake every frameconst url = " // keep string content untouched";window.snakeStarted = true;</script\t bar></body></html></lobeArtifact>',
++      '<artifact identifier="snake-game" type="text/html" title="Snake Game"><!DOCTYPE html><html><body><script>// Move the snake every frameconst url = " // keep string content untouched";window.snakeStarted = true;</script\t bar></body></html></artifact>',
+     );
+     expect(output).not.toContain('<script>\n');
+   });
+@@ -350,68 +350,68 @@ window.snakeStarted = true;
+ describe('outer code block removal', () => {
+   it('should remove outer html code block', () => {
+     const input = `\`\`\`html
+-<lobeThinking>Test thinking</lobeThinking>
+-<lobeArtifact identifier="test" type="text/html" title="Test">
++<thinking>Test thinking</thinking>
++<artifact identifier="test" type="text/html" title="Test">
+ <!DOCTYPE html>
+ <html>
+ <body>Test</body>
+ </html>
+-</lobeArtifact>
++</artifact>
+ \`\`\``;
+ 
+     const output = processWithArtifact(input);
+ 
+-    expect(output).toEqual(`<lobeThinking>Test thinking</lobeThinking>
++    expect(output).toEqual(`<thinking>Test thinking</thinking>
+ 
+-<lobeArtifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></lobeArtifact>`);
++<artifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></artifact>`);
+   });
+ 
+   it('should remove outer tool_code code block', () => {
+     const input = `\`\`\`tool_code
+-<lobeThinking>Test thinking</lobeThinking>
+-<lobeArtifact identifier="test" type="text/html" title="Test">
++<thinking>Test thinking</thinking>
++<artifact identifier="test" type="text/html" title="Test">
+ <!DOCTYPE html>
+ <html>
+ <body>Test</body>
+ </html>
+-</lobeArtifact>
++</artifact>
+ \`\`\``;
+ 
+     const output = processWithArtifact(input);
+ 
+-    expect(output).toEqual(`<lobeThinking>Test thinking</lobeThinking>
++    expect(output).toEqual(`<thinking>Test thinking</thinking>
+ 
+-<lobeArtifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></lobeArtifact>`);
++<artifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></artifact>`);
+   });
+ 
+   it('should handle input without outer code block', () => {
+-    const input = `<lobeThinking>Test thinking</lobeThinking>
+-<lobeArtifact identifier="test" type="text/html" title="Test">
++    const input = `<thinking>Test thinking</thinking>
++<artifact identifier="test" type="text/html" title="Test">
+ <!DOCTYPE html>
+ <html>
+ <body>Test</body>
+ </html>
+-</lobeArtifact>`;
++</artifact>`;
+ 
+     const output = processWithArtifact(input);
+ 
+-    expect(output).toEqual(`<lobeThinking>Test thinking</lobeThinking>
++    expect(output).toEqual(`<thinking>Test thinking</thinking>
+ 
+-<lobeArtifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></lobeArtifact>`);
++<artifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></artifact>`);
+   });
+ 
+   it('should handle code block with content before and after', () => {
+     const input = `Some text before
+ 
+ \`\`\`html
+-<lobeThinking>Test thinking</lobeThinking>
++<thinking>Test thinking</thinking>
+ 
+-<lobeArtifact identifier="test" type="text/html" title="Test">
++<artifact identifier="test" type="text/html" title="Test">
+ <!DOCTYPE html>
+ <html>
+ <body>Test</body>
+ </html>
+-</lobeArtifact>
++</artifact>
+ \`\`\`
+ 
+ Some text after`;
+@@ -420,41 +420,41 @@ Some text after`;
+ 
+     expect(output).toEqual(`Some text before
+ 
+-<lobeThinking>Test thinking</lobeThinking>
++<thinking>Test thinking</thinking>
+ 
+-<lobeArtifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></lobeArtifact>
++<artifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></artifact>
+ 
+ Some text after`);
+   });
+ 
+-  it('should handle code block with only lobeArtifact tag', () => {
++  it('should handle code block with only artifact tag', () => {
+     const input = `\`\`\`html
+-<lobeArtifact identifier="test" type="text/html" title="Test">
++<artifact identifier="test" type="text/html" title="Test">
+ <!DOCTYPE html>
+ <html>
+ <body>Test</body>
+ </html>
+-</lobeArtifact>
++</artifact>
+ \`\`\``;
+ 
+     const output = processWithArtifact(input);
+ 
+     expect(output).toEqual(
+-      `<lobeArtifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></lobeArtifact>`,
++      `<artifact identifier="test" type="text/html" title="Test"><!DOCTYPE html><html><body>Test</body></html></artifact>`,
+     );
+   });
+ 
+-  it('should handle code block with surrounding text and both lobeThinking and lobeArtifact', () => {
++  it('should handle code block with surrounding text and both thinking and artifact', () => {
+     const input = `---
+ 
+ \`\`\`tool_code
+-<lobeThinking>The user reported a \`SyntaxError\` in the browser console, indicating a problem with the JavaScript code in the calculator artifact. The error message "Identifier 'display' has already been declared" suggests a variable naming conflict. I need to review the JavaScript code and correct the issue. This is an update to the existing "calculator-web-artifact" artifact.</lobeThinking>
+-<lobeArtifact identifier="calculator-web-artifact" type="text/html" title="Simple Calculator">
++<thinking>The user reported a \`SyntaxError\` in the browser console, indicating a problem with the JavaScript code in the calculator artifact. The error message "Identifier 'display' has already been declared" suggests a variable naming conflict. I need to review the JavaScript code and correct the issue. This is an update to the existing "calculator-web-artifact" artifact.</thinking>
++<artifact identifier="calculator-web-artifact" type="text/html" title="Simple Calculator">
+ <!DOCTYPE html>
+ <html lang="en">
+ ...
+ </html>
+-</lobeArtifact>
++</artifact>
+ \`\`\`
+ I've updated the calculator artifact. The issue was a naming conflict with the \`display\` variable. I've renamed the input element's ID to \`calc-display\` and the JavaScript variable to \`displayElement\` to avoid the conflict. The calculator should now function correctly.
+ 
+@@ -464,16 +464,16 @@ I've updated the calculator artifact. The issue was a naming conflict with the \
+ 
+     expect(output).toEqual(`---
+ 
+-<lobeThinking>The user reported a \`SyntaxError\` in the browser console, indicating a problem with the JavaScript code in the calculator artifact. The error message "Identifier 'display' has already been declared" suggests a variable naming conflict. I need to review the JavaScript code and correct the issue. This is an update to the existing "calculator-web-artifact" artifact.</lobeThinking>
++<thinking>The user reported a \`SyntaxError\` in the browser console, indicating a problem with the JavaScript code in the calculator artifact. The error message "Identifier 'display' has already been declared" suggests a variable naming conflict. I need to review the JavaScript code and correct the issue. This is an update to the existing "calculator-web-artifact" artifact.</thinking>
+ 
+-<lobeArtifact identifier="calculator-web-artifact" type="text/html" title="Simple Calculator"><!DOCTYPE html><html lang="en">...</html></lobeArtifact>
++<artifact identifier="calculator-web-artifact" type="text/html" title="Simple Calculator"><!DOCTYPE html><html lang="en">...</html></artifact>
+ 
+ I've updated the calculator artifact. The issue was a naming conflict with the \`display\` variable. I've renamed the input element's ID to \`calc-display\` and the JavaScript variable to \`displayElement\` to avoid the conflict. The calculator should now function correctly.
+ 
+ ---`);
+   });
+ 
+-  it('should handle code block before lobeThinking and lobeArtifact', () => {
++  it('should handle code block before thinking and artifact', () => {
+     const input = `
+ Okay, I'll create a temperature converter with the logic wrapped in an IIFE and event listeners attached in Javascript.
+ 
+@@ -484,16 +484,16 @@ Okay, I'll create a temperature converter with the logic wrapped in an IIFE and
+ </html>
+ \`\`\`
+ 
+-<lobeThinking>This is a good candidate for an artifact. It's a self-contained HTML document with embedded JavaScript that provides a functional temperature converter. It's more than a simple code snippet and can be reused or modified. This is a new request, so I'll create a new artifact with the identifier "temperature-converter".</lobeThinking>
++<thinking>This is a good candidate for an artifact. It's a self-contained HTML document with embedded JavaScript that provides a functional temperature converter. It's more than a simple code snippet and can be reused or modified. This is a new request, so I'll create a new artifact with the identifier "temperature-converter".</thinking>
+ 
+-<lobeArtifact identifier="temperature-converter" type="text/html" title="Temperature Converter">
++<artifact identifier="temperature-converter" type="text/html" title="Temperature Converter">
+ \`\`\`html
+ <!DOCTYPE html>
+ <html lang="en">
+ ...
+ </html>
+ \`\`\`
+-</lobeArtifact>
++</artifact>
+ This HTML document includes the temperature converter with the requested features: the logic is wrapped in an IIFE, and event listeners are attached in JavaScript.
+ `;
+ 
+@@ -509,20 +509,20 @@ This HTML document includes the temperature converter with the requested feature
+ </html>
+ \`\`\`
+ 
+-<lobeThinking>This is a good candidate for an artifact. It's a self-contained HTML document with embedded JavaScript that provides a functional temperature converter. It's more than a simple code snippet and can be reused or modified. This is a new request, so I'll create a new artifact with the identifier "temperature-converter".</lobeThinking>
++<thinking>This is a good candidate for an artifact. It's a self-contained HTML document with embedded JavaScript that provides a functional temperature converter. It's more than a simple code snippet and can be reused or modified. This is a new request, so I'll create a new artifact with the identifier "temperature-converter".</thinking>
+ 
+-<lobeArtifact identifier="temperature-converter" type="text/html" title="Temperature Converter"><!DOCTYPE html><html lang="en">...</html></lobeArtifact>
++<artifact identifier="temperature-converter" type="text/html" title="Temperature Converter"><!DOCTYPE html><html lang="en">...</html></artifact>
+ 
+ This HTML document includes the temperature converter with the requested features: the logic is wrapped in an IIFE, and event listeners are attached in JavaScript.`);
+   });
+ 
+   describe('idempotency tests', () => {
+     it('should not add extra blank lines when running processWithArtifact multiple times', () => {
+-      const input = `<lobeThinking>这是一个思考过程。</lobeThinking><lobeArtifact identifier="test" type="image/svg+xml" title="测试">
++      const input = `<thinking>这是一个思考过程。</thinking><artifact identifier="test" type="image/svg+xml" title="测试">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+   <rect width="100" height="100" fill="blue"/>
+ </svg>
+-</lobeArtifact>`;
++</artifact>`;
+ 
+       // First run
+       const firstRun = processWithArtifact(input);
+@@ -538,14 +538,14 @@ This HTML document includes the temperature converter with the requested feature
+       expect(secondRun).toEqual(thirdRun);
+ 
+       // Verify the output has exactly two newlines between tags
+-      expect(firstRun).toContain('</lobeThinking>\n\n<lobeArtifact');
+-      expect(firstRun.match(/(<\/lobeThinking>)\n\n(<lobeArtifact)/)).toBeTruthy();
++      expect(firstRun).toContain('</thinking>\n\n<artifact');
++      expect(firstRun.match(/(<\/thinking>)\n\n(<artifact)/)).toBeTruthy();
+     });
+ 
+     it('should handle already processed content with proper spacing', () => {
+-      const alreadyProcessed = `<lobeThinking>这是一个思考过程。</lobeThinking>
++      const alreadyProcessed = `<thinking>这是一个思考过程。</thinking>
+ 
+-<lobeArtifact identifier="test" type="image/svg+xml" title="测试"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">  <rect width="100" height="100" fill="blue"/></svg></lobeArtifact>`;
++<artifact identifier="test" type="image/svg+xml" title="测试"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">  <rect width="100" height="100" fill="blue"/></svg></artifact>`;
+ 
+       const result = processWithArtifact(alreadyProcessed);
+ 
+@@ -554,17 +554,17 @@ This HTML document includes the temperature converter with the requested feature
+     });
+ 
+     it('should not convert spaces between tags into extra blank lines', () => {
+-      const inputWithSpaces = `<lobeThinking>这是一个思考过程。</lobeThinking> <lobeArtifact identifier="test" type="image/svg+xml" title="测试">
++      const inputWithSpaces = `<thinking>这是一个思考过程。</thinking> <artifact identifier="test" type="image/svg+xml" title="测试">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+   <rect width="100" height="100" fill="blue"/>
+ </svg>
+-</lobeArtifact>`;
++</artifact>`;
+ 
+       const output = processWithArtifact(inputWithSpaces);
+ 
+       // Should still have the space and not convert it to newlines
+-      expect(output).toContain('</lobeThinking> <lobeArtifact');
+-      expect(output).not.toContain('</lobeThinking>\n\n<lobeArtifact');
++      expect(output).toContain('</thinking> <artifact');
++      expect(output).not.toContain('</thinking>\n\n<artifact');
+     });
+   });
+ 
+diff --git a/src/features/Conversation/utils/markdown.ts b/src/features/Conversation/utils/markdown.ts
+index bd08c68613..dfbd82b5c0 100644
+--- a/src/features/Conversation/utils/markdown.ts
++++ b/src/features/Conversation/utils/markdown.ts
+@@ -1,7 +1,7 @@
+ import { ARTIFACT_THINKING_TAG_REGEX } from '@lobechat/const';
+ 
+ const ARTIFACT_TAG_REGEX_GLOBAL =
+-  /<lobeArtifact\b[^>]*>(?<content>[\S\s]*?)(?:<\/lobeArtifact>|$)/g;
++  /<artifact\b[^>]*>(?<content>[\S\s]*?)(?:<\/artifact>|$)/g;
+ 
+ // Match only the `lobeAgents` tag itself (self-closing `/>` or a bare opening
+ // `>`), never the content that follows it. The card is built purely from the
+@@ -14,13 +14,13 @@ const ARTIFACT_TAG_REGEX_GLOBAL =
+ const AGENTS_TAG_REGEX_GLOBAL = /<lobeAgents\b[^>]*>/g;
+ 
+ /**
+- * Replace all line breaks in the matched `lobeArtifact` tag with an empty string
++ * Replace all line breaks in the matched `artifact` tag with an empty string
+  */
+ export const processWithArtifact = (input: string = '') => {
+   // First remove outer fenced code block if it exists
+   /* eslint-disable regexp/no-super-linear-backtracking */
+   let output = input.replace(
+-    /^([\s\S]*?)\s*```[^\n]*\n((?:<lobeThinking>[\s\S]*?<\/lobeThinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*)?<lobeArtifact[\s\S]*?<\/lobeArtifact>\s*)\n```\s*([\s\S]*)$/,
++    /^([\s\S]*?)\s*```[^\n]*\n((?:<thinking>[\s\S]*?<\/thinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*)?<artifact[\s\S]*?<\/artifact>\s*)\n```\s*([\s\S]*)$/,
+     (_, before = '', content, after = '') => {
+       return [before.trim(), content.trim(), after.trim()].filter(Boolean).join('\n\n');
+     },
+@@ -29,20 +29,20 @@ export const processWithArtifact = (input: string = '') => {
+ 
+   const thinkMatch = ARTIFACT_THINKING_TAG_REGEX.exec(output);
+ 
+-  // If the input contains the `lobeThinking` tag, replace all line breaks with an empty string
++  // If the input contains the `thinking` tag, replace all line breaks with an empty string
+   if (thinkMatch) {
+     output = output.replace(ARTIFACT_THINKING_TAG_REGEX, (match) =>
+       match.replaceAll(/\r?\n|\r/g, ''),
+     );
+   }
+ 
+-  // Add empty line between lobeThinking and lobeArtifact if they are adjacent
++  // Add empty line between thinking and artifact if they are adjacent
+   // Support both cases: with line break (e.g. from other models) and without (e.g. from Gemini)
+-  output = output.replace(/(<\/lobeThinking>)(?:\r?\n)?(<lobeArtifact)/, '$1\n\n$2');
++  output = output.replace(/(<\/thinking>)(?:\r?\n)?(<artifact)/, '$1\n\n$2');
+ 
+-  // Remove fenced code block between lobeArtifact and HTML content
++  // Remove fenced code block between artifact and HTML content
+   output = output.replace(
+-    /(<lobeArtifact[^>]*>)\s*```[^\n]*\n([\s\S]*?)(```\n)?(<\/lobeArtifact>)/,
++    /(<artifact[^>]*>)\s*```[^\n]*\n([\s\S]*?)(```\n)?(<\/artifact>)/,
+     (_, start, content, __, end) => {
+       if (content.trim().startsWith('<!DOCTYPE html') || content.trim().startsWith('<html')) {
+         return start + content.trim() + end;
+@@ -51,15 +51,15 @@ export const processWithArtifact = (input: string = '') => {
+     },
+   );
+ 
+-  // Keep existing code blocks that are not part of lobeArtifact
++  // Keep existing code blocks that are not part of artifact
+   output = output.replace(
+-    /^([\s\S]*?)(<lobeThinking>[\s\S]*?<\/lobeThinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*<lobeArtifact[\s\S]*?<\/lobeArtifact>)([\s\S]*)$/,
++    /^([\s\S]*?)(<thinking>[\s\S]*?<\/thinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*<artifact[\s\S]*?<\/artifact>)([\s\S]*)$/,
+     (_, before, content, after) => {
+       return [before.trim(), content.trim(), after.trim()].filter(Boolean).join('\n\n');
+     },
+   );
+ 
+-  // If the input contains `lobeArtifact` tags, replace all line breaks with an empty string
++  // If the input contains `artifact` tags, replace all line breaks with an empty string
+   // Use global regex to handle multiple artifacts in the same message
+   // Keep artifact markup as one raw HTML segment for the rehype artifact plugin. Preserving
+   // script block newlines here can make Markdown parse script text outside the custom tag.
+@@ -67,10 +67,10 @@ export const processWithArtifact = (input: string = '') => {
+     match.replaceAll(/\r?\n|\r/g, ''),
+   );
+ 
+-  // if not match, check if it's start with <lobeArtifact but not closed
+-  const regex = /<lobeArtifact\b(?:(?!\/?>)[\s\S])*$/;
++  // if not match, check if it's start with <artifact but not closed
++  const regex = /<artifact\b(?:(?!\/?>)[\s\S])*$/;
+   if (regex.test(output)) {
+-    output = output.replace(regex, '<lobeArtifact>');
++    output = output.replace(regex, '<artifact>');
+   }
+ 
+   // Strip newlines inside the lobeAgents tag so attributes spread across lines
+diff --git a/src/store/chat/slices/portal/selectors.test.ts b/src/store/chat/slices/portal/selectors.test.ts
+index 916764e9a3..37e38bee3c 100644
+--- a/src/store/chat/slices/portal/selectors.test.ts
++++ b/src/store/chat/slices/portal/selectors.test.ts
+@@ -526,7 +526,7 @@ describe('chatDockSelectors', () => {
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact type="text">${artifactContent}</lobeArtifact>`,
++              content: `<artifact type="text">${artifactContent}</artifact>`,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -553,11 +553,11 @@ describe('chatDockSelectors', () => {
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact type="text/html">
++              content: `<artifact type="text/html">
+ \`\`\`html
+ ${htmlContent}
+ \`\`\`
+-</lobeArtifact>`,
++</artifact>`,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -579,7 +579,7 @@ ${htmlContent}
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact type="text/html">
++              content: `<artifact type="text/html">
+ \`\`\`html
+ ${htmlContent}`,
+               createdAt: Date.now(),
+@@ -601,7 +601,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact identifier="first" type="text">${content1}</lobeArtifact>\n\n<lobeArtifact identifier="second" type="text">${content2}</lobeArtifact>`,
++              content: `<artifact identifier="first" type="text">${content1}</artifact>\n\n<artifact identifier="second" type="text">${content2}</artifact>`,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -620,7 +620,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact identifier="real" type="text">Real content</lobeArtifact>`,
++              content: `<artifact identifier="real" type="text">Real content</artifact>`,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -638,7 +638,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact identifier="done" type="text">Done</lobeArtifact>\n\n<lobeArtifact identifier="wip" type="text">Still generating...`,
++              content: `<artifact identifier="done" type="text">Done</artifact>\n\n<artifact identifier="wip" type="text">Still generating...`,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -657,7 +657,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact identifier="test+id(1)[2]" type="text">Special content</lobeArtifact>`,
++              content: `<artifact identifier="test+id(1)[2]" type="text">Special content</artifact>`,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -679,7 +679,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: `<lobeArtifact identifier="a" type="text">${content1}</lobeArtifact>\n\n<lobeArtifact identifier="b" type="text">Second</lobeArtifact>`,
++              content: `<artifact identifier="a" type="text">${content1}</artifact>\n\n<artifact identifier="b" type="text">Second</artifact>`,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -699,7 +699,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: '<lobeArtifact type="text">Test content',
++              content: '<artifact type="text">Test content',
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -717,7 +717,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: '<lobeArtifact type="text">Test content</lobeArtifact>',
++              content: '<artifact type="text">Test content</artifact>',
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -754,7 +754,7 @@ ${htmlContent}`,
+             {
+               id: 'test-id',
+               content:
+-                '<lobeArtifact identifier="a" type="text">A</lobeArtifact>\n\n<lobeArtifact identifier="b" type="text">B</lobeArtifact>',
++                '<artifact identifier="a" type="text">A</artifact>\n\n<artifact identifier="b" type="text">B</artifact>',
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -773,7 +773,7 @@ ${htmlContent}`,
+           'test-id_null': [
+             {
+               id: 'test-id',
+-              content: '<lobeArtifact identifier="exists" type="text">Content</lobeArtifact>',
++              content: '<artifact identifier="exists" type="text">Content</artifact>',
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+@@ -792,7 +792,7 @@ ${htmlContent}`,
+             {
+               id: 'test-id',
+               content:
+-                '<lobeArtifact identifier="done" type="text">Content 1</lobeArtifact>\n\n<lobeArtifact identifier="generating" type="text">Content 2 still going',
++                '<artifact identifier="done" type="text">Content 1</artifact>\n\n<artifact identifier="generating" type="text">Content 2 still going',
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+               role: 'user',
+diff --git a/src/store/chat/slices/portal/selectors.ts b/src/store/chat/slices/portal/selectors.ts
+index d2a16a1411..4444b78937 100644
+--- a/src/store/chat/slices/portal/selectors.ts
++++ b/src/store/chat/slices/portal/selectors.ts
+@@ -87,7 +87,7 @@ const artifactCode = (id: string, identifier?: string) => (s: ChatStoreState) =>
+ 
+   const regex = identifier
+     ? new RegExp(
+-        `<lobeArtifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>(?<content>[\\S\\s]*?)(?:<\\/lobeArtifact>|$)`,
++        `<artifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>(?<content>[\\S\\s]*?)(?:<\\/artifact>|$)`,
+       )
+     : ARTIFACT_TAG_REGEX;
+ 
+@@ -105,7 +105,7 @@ const isArtifactTagClosed = (id: string, identifier?: string) => (s: ChatStoreSt
+   if (identifier) {
+     // Check if the specific artifact (by identifier) is closed
+     const regex = new RegExp(
+-      `<lobeArtifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>[\\S\\s]*?<\\/lobeArtifact>`,
++      `<artifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>[\\S\\s]*?<\\/artifact>`,
+     );
+     return regex.test(content || '');
+   }
