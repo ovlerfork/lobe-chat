@@ -1,7 +1,7 @@
 import ImageSearchRef from './ImageSearchRef';
 import Link from './Link';
 import LobeAgents from './LobeAgents';
-import LobeArtifact from './LobeArtifact';
+import Artifact from './Artifact';
 import LobeThinking from './LobeThinking';
 import LocalFile from './LocalFile';
 import LocalFileLink from './LocalFileLink';
@@ -17,7 +17,7 @@ export type { MarkdownElement } from './type';
 
 export const markdownElements: MarkdownElement[] = [
   Thinking,
-  LobeArtifact,
+  Artifact,
   LobeThinking,
   LocalFile,
   Mention,

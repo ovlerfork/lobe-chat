@@ -87,7 +87,7 @@ const artifactCode = (id: string, identifier?: string) => (s: ChatStoreState) =>
 
   const regex = identifier
     ? new RegExp(
-        `<lobeArtifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>(?<content>[\\S\\s]*?)(?:<\\/lobeArtifact>|$)`,
+        `<artifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>(?<content>[\\S\\s]*?)(?:<\\/artifact>|$)`,
       )
     : ARTIFACT_TAG_REGEX;
 
@@ -105,7 +105,7 @@ const isArtifactTagClosed = (id: string, identifier?: string) => (s: ChatStoreSt
   if (identifier) {
     // Check if the specific artifact (by identifier) is closed
     const regex = new RegExp(
-      `<lobeArtifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>[\\S\\s]*?<\\/lobeArtifact>`,
+      `<artifact\\b[^>]*identifier="${escapeRegExp(identifier)}"[^>]*>[\\S\\s]*?<\\/artifact>`,
     );
     return regex.test(content || '');
   }

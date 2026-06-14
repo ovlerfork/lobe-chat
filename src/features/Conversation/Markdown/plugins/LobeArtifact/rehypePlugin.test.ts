@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import rehypePlugin from './rehypePlugin';
 
 describe('rehypePlugin', () => {
-  it('should transform <lobeArtifact> tags with attributes', () => {
+  it('should transform <artifact> tags with attributes', () => {
     const tree = {
       type: 'root',
       children: [
@@ -13,10 +13,10 @@ describe('rehypePlugin', () => {
           children: [
             {
               type: 'raw',
-              value: '<lobeArtifact identifier="test-id" type="image/svg+xml" title="Test Title">',
+              value: '<artifact identifier="test-id" type="image/svg+xml" title="Test Title">',
             },
             { type: 'text', value: 'Artifact content' },
-            { type: 'raw', value: '</lobeArtifact>' },
+            { type: 'raw', value: '</artifact>' },
           ],
         },
       ],
@@ -27,7 +27,7 @@ describe('rehypePlugin', () => {
       children: [
         {
           type: 'element',
-          tagName: 'lobeArtifact',
+          tagName: 'artifact',
           properties: {
             identifier: 'test-id',
             type: 'image/svg+xml',
@@ -57,9 +57,9 @@ describe('rehypePlugin', () => {
           type: 'element',
           tagName: 'p',
           children: [
-            { type: 'raw', value: '<lobeThinking>' },
+            { type: 'raw', value: '<thinking>' },
             { type: 'text', value: 'AI is thinking...' },
-            { type: 'raw', value: '</lobeThinking>' },
+            { type: 'raw', value: '</thinking>' },
           ],
         },
         {
@@ -68,10 +68,10 @@ describe('rehypePlugin', () => {
           children: [
             {
               type: 'raw',
-              value: '<lobeArtifact identifier="test-id" type="image/svg+xml" title="Test Title">',
+              value: '<artifact identifier="test-id" type="image/svg+xml" title="Test Title">',
             },
             { type: 'text', value: 'Artifact content' },
-            { type: 'raw', value: '</lobeArtifact>' },
+            { type: 'raw', value: '</artifact>' },
           ],
         },
         {
@@ -94,14 +94,14 @@ describe('rehypePlugin', () => {
           type: 'element',
           tagName: 'p',
           children: [
-            { type: 'raw', value: '<lobeThinking>' },
+            { type: 'raw', value: '<thinking>' },
             { type: 'text', value: 'AI is thinking...' },
-            { type: 'raw', value: '</lobeThinking>' },
+            { type: 'raw', value: '</thinking>' },
           ],
         },
         {
           type: 'element',
-          tagName: 'lobeArtifact',
+          tagName: 'artifact',
           properties: {
             identifier: 'test-id',
             type: 'image/svg+xml',
@@ -123,7 +123,7 @@ describe('rehypePlugin', () => {
     expect(tree).toEqual(expectedTree);
   });
 
-  it('should transform multiple <lobeArtifact> tags in the same tree', () => {
+  it('should transform multiple <artifact> tags in the same tree', () => {
     const tree = {
       type: 'root',
       children: [
@@ -139,10 +139,10 @@ describe('rehypePlugin', () => {
             {
               type: 'raw',
               value:
-                '<lobeArtifact identifier="first" type="text/markdown" title="First Artifact">',
+                '<artifact identifier="first" type="text/markdown" title="First Artifact">',
             },
             { type: 'text', value: 'First content' },
-            { type: 'raw', value: '</lobeArtifact>' },
+            { type: 'raw', value: '</artifact>' },
           ],
         },
         {
@@ -152,10 +152,10 @@ describe('rehypePlugin', () => {
             {
               type: 'raw',
               value:
-                '<lobeArtifact identifier="second" type="text/markdown" title="Second Artifact">',
+                '<artifact identifier="second" type="text/markdown" title="Second Artifact">',
             },
             { type: 'text', value: 'Second content' },
-            { type: 'raw', value: '</lobeArtifact>' },
+            { type: 'raw', value: '</artifact>' },
           ],
         },
         {
@@ -173,7 +173,7 @@ describe('rehypePlugin', () => {
     expect(tree.children).toHaveLength(4);
     expect(tree.children[1]).toEqual({
       type: 'element',
-      tagName: 'lobeArtifact',
+      tagName: 'artifact',
       properties: {
         identifier: 'first',
         type: 'text/markdown',
@@ -183,7 +183,7 @@ describe('rehypePlugin', () => {
     });
     expect(tree.children[2]).toEqual({
       type: 'element',
-      tagName: 'lobeArtifact',
+      tagName: 'artifact',
       properties: {
         identifier: 'second',
         type: 'text/markdown',
@@ -193,17 +193,17 @@ describe('rehypePlugin', () => {
     });
   });
 
-  it('should transform multiple raw <lobeArtifact> nodes (without wrapping <p>)', () => {
+  it('should transform multiple raw <artifact> nodes (without wrapping <p>)', () => {
     const tree = {
       type: 'root',
       children: [
         {
           type: 'raw',
-          value: '<lobeArtifact identifier="raw-1" type="text/html" title="Raw First">',
+          value: '<artifact identifier="raw-1" type="text/html" title="Raw First">',
         },
         {
           type: 'raw',
-          value: '<lobeArtifact identifier="raw-2" type="text/html" title="Raw Second">',
+          value: '<artifact identifier="raw-2" type="text/html" title="Raw Second">',
         },
       ],
     };
@@ -212,7 +212,7 @@ describe('rehypePlugin', () => {
     plugin(tree);
 
     expect(tree.children).toHaveLength(2);
-    expect((tree.children[0] as any).tagName).toBe('lobeArtifact');
-    expect((tree.children[1] as any).tagName).toBe('lobeArtifact');
+    expect((tree.children[0] as any).tagName).toBe('artifact');
+    expect((tree.children[1] as any).tagName).toBe('artifact');
   });
 });

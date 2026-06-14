@@ -526,7 +526,7 @@ describe('chatDockSelectors', () => {
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact type="text">${artifactContent}</lobeArtifact>`,
+              content: `<artifact type="text">${artifactContent}</artifact>`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -553,11 +553,11 @@ describe('chatDockSelectors', () => {
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact type="text/html">
+              content: `<artifact type="text/html">
 \`\`\`html
 ${htmlContent}
 \`\`\`
-</lobeArtifact>`,
+</artifact>`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -579,7 +579,7 @@ ${htmlContent}
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact type="text/html">
+              content: `<artifact type="text/html">
 \`\`\`html
 ${htmlContent}`,
               createdAt: Date.now(),
@@ -601,7 +601,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact identifier="first" type="text">${content1}</lobeArtifact>\n\n<lobeArtifact identifier="second" type="text">${content2}</lobeArtifact>`,
+              content: `<artifact identifier="first" type="text">${content1}</artifact>\n\n<artifact identifier="second" type="text">${content2}</artifact>`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -620,7 +620,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact identifier="real" type="text">Real content</lobeArtifact>`,
+              content: `<artifact identifier="real" type="text">Real content</artifact>`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -638,7 +638,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact identifier="done" type="text">Done</lobeArtifact>\n\n<lobeArtifact identifier="wip" type="text">Still generating...`,
+              content: `<artifact identifier="done" type="text">Done</artifact>\n\n<artifact identifier="wip" type="text">Still generating...`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -657,7 +657,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact identifier="test+id(1)[2]" type="text">Special content</lobeArtifact>`,
+              content: `<artifact identifier="test+id(1)[2]" type="text">Special content</artifact>`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -679,7 +679,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: `<lobeArtifact identifier="a" type="text">${content1}</lobeArtifact>\n\n<lobeArtifact identifier="b" type="text">Second</lobeArtifact>`,
+              content: `<artifact identifier="a" type="text">${content1}</artifact>\n\n<artifact identifier="b" type="text">Second</artifact>`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -699,7 +699,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: '<lobeArtifact type="text">Test content',
+              content: '<artifact type="text">Test content',
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -717,7 +717,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: '<lobeArtifact type="text">Test content</lobeArtifact>',
+              content: '<artifact type="text">Test content</artifact>',
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -754,7 +754,7 @@ ${htmlContent}`,
             {
               id: 'test-id',
               content:
-                '<lobeArtifact identifier="a" type="text">A</lobeArtifact>\n\n<lobeArtifact identifier="b" type="text">B</lobeArtifact>',
+                '<artifact identifier="a" type="text">A</artifact>\n\n<artifact identifier="b" type="text">B</artifact>',
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -773,7 +773,7 @@ ${htmlContent}`,
           'test-id_null': [
             {
               id: 'test-id',
-              content: '<lobeArtifact identifier="exists" type="text">Content</lobeArtifact>',
+              content: '<artifact identifier="exists" type="text">Content</artifact>',
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',
@@ -792,7 +792,7 @@ ${htmlContent}`,
             {
               id: 'test-id',
               content:
-                '<lobeArtifact identifier="done" type="text">Content 1</lobeArtifact>\n\n<lobeArtifact identifier="generating" type="text">Content 2 still going',
+                '<artifact identifier="done" type="text">Content 1</artifact>\n\n<artifact identifier="generating" type="text">Content 2 still going',
               createdAt: Date.now(),
               updatedAt: Date.now(),
               role: 'user',

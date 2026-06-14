@@ -8,7 +8,7 @@ function rehypeAntArtifact() {
       if (node.type === 'element' && node.tagName === 'p' && node.children.length > 0) {
         const firstChild = node.children[0];
         if (firstChild.type === 'raw' && firstChild.value.startsWith(`<${ARTIFACT_TAG}`)) {
-          // Extract lobeArtifact attributes
+          // Extract artifact attributes
           const attributes: Record<string, string> = {};
           const attributeRegex = /(\w+)="([^"]*)"/g;
           let match;
@@ -16,7 +16,7 @@ function rehypeAntArtifact() {
             attributes[match[1]] = match[2];
           }
 
-          // Create new lobeArtifact node
+          // Create new artifact node
           const newNode = {
             children: [
               {
@@ -47,15 +47,15 @@ function rehypeAntArtifact() {
           return [SKIP, index];
         }
       }
-      // If the string is <lobeArtifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">
+      // If the string is <artifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">
       // The resulting node is:
       // {
       //   type: 'raw',
       //   value:
-      //     '<lobeArtifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">',
+      //     '<artifact identifier="ai-new-interpretation" type="image/svg+xml" title="New AI Interpretation">',
       // }
       else if (node.type === 'raw' && node.value.startsWith(`<${ARTIFACT_TAG}`)) {
-        // Create new lobeArtifact node
+        // Create new artifact node
         const newNode = {
           children: [],
           properties: {},

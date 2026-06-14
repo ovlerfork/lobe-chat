@@ -1,7 +1,7 @@
 import { ARTIFACT_THINKING_TAG_REGEX } from '@lobechat/const';
 
 const ARTIFACT_TAG_REGEX_GLOBAL =
-  /<lobeArtifact\b[^>]*>(?<content>[\S\s]*?)(?:<\/lobeArtifact>|$)/g;
+  /<artifact\b[^>]*>(?<content>[\S\s]*?)(?:<\/artifact>|$)/g;
 
 // Match only the `lobeAgents` tag itself (self-closing `/>` or a bare opening
 // `>`), never the content that follows it. The card is built purely from the
@@ -14,13 +14,13 @@ const ARTIFACT_TAG_REGEX_GLOBAL =
 const AGENTS_TAG_REGEX_GLOBAL = /<lobeAgents\b[^>]*>/g;
 
 /**
- * Replace all line breaks in the matched `lobeArtifact` tag with an empty string
+ * Replace all line breaks in the matched `artifact` tag with an empty string
  */
 export const processWithArtifact = (input: string = '') => {
   // First remove outer fenced code block if it exists
   /* eslint-disable regexp/no-super-linear-backtracking */
   let output = input.replace(
-    /^([\s\S]*?)\s*```[^\n]*\n((?:<lobeThinking>[\s\S]*?<\/lobeThinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*)?<lobeArtifact[\s\S]*?<\/lobeArtifact>\s*)\n```\s*([\s\S]*)$/,
+    /^([\s\S]*?)\s*```[^\n]*\n((?:<thinking>[\s\S]*?<\/thinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*)?<artifact[\s\S]*?<\/artifact>\s*)\n```\s*([\s\S]*)$/,
     (_, before = '', content, after = '') => {
       return [before.trim(), content.trim(), after.trim()].filter(Boolean).join('\n\n');
     },
@@ -29,20 +29,20 @@ export const processWithArtifact = (input: string = '') => {
 
   const thinkMatch = ARTIFACT_THINKING_TAG_REGEX.exec(output);
 
-  // If the input contains the `lobeThinking` tag, replace all line breaks with an empty string
+  // If the input contains the `thinking` tag, replace all line breaks with an empty string
   if (thinkMatch) {
     output = output.replace(ARTIFACT_THINKING_TAG_REGEX, (match) =>
       match.replaceAll(/\r?\n|\r/g, ''),
     );
   }
 
-  // Add empty line between lobeThinking and lobeArtifact if they are adjacent
+  // Add empty line between thinking and artifact if they are adjacent
   // Support both cases: with line break (e.g. from other models) and without (e.g. from Gemini)
-  output = output.replace(/(<\/lobeThinking>)(?:\r?\n)?(<lobeArtifact)/, '$1\n\n$2');
+  output = output.replace(/(<\/thinking>)(?:\r?\n)?(<artifact)/, '$1\n\n$2');
 
-  // Remove fenced code block between lobeArtifact and HTML content
+  // Remove fenced code block between artifact and HTML content
   output = output.replace(
-    /(<lobeArtifact[^>]*>)\s*```[^\n]*\n([\s\S]*?)(```\n)?(<\/lobeArtifact>)/,
+    /(<artifact[^>]*>)\s*```[^\n]*\n([\s\S]*?)(```\n)?(<\/artifact>)/,
     (_, start, content, __, end) => {
       if (content.trim().startsWith('<!DOCTYPE html') || content.trim().startsWith('<html')) {
         return start + content.trim() + end;
@@ -51,15 +51,15 @@ export const processWithArtifact = (input: string = '') => {
     },
   );
 
-  // Keep existing code blocks that are not part of lobeArtifact
+  // Keep existing code blocks that are not part of artifact
   output = output.replace(
-    /^([\s\S]*?)(<lobeThinking>[\s\S]*?<\/lobeThinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*<lobeArtifact[\s\S]*?<\/lobeArtifact>)([\s\S]*)$/,
+    /^([\s\S]*?)(<thinking>[\s\S]*?<\/thinking>[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*<artifact[\s\S]*?<\/artifact>)([\s\S]*)$/,
     (_, before, content, after) => {
       return [before.trim(), content.trim(), after.trim()].filter(Boolean).join('\n\n');
     },
   );
 
-  // If the input contains `lobeArtifact` tags, replace all line breaks with an empty string
+  // If the input contains `artifact` tags, replace all line breaks with an empty string
   // Use global regex to handle multiple artifacts in the same message
   // Keep artifact markup as one raw HTML segment for the rehype artifact plugin. Preserving
   // script block newlines here can make Markdown parse script text outside the custom tag.
@@ -67,10 +67,10 @@ export const processWithArtifact = (input: string = '') => {
     match.replaceAll(/\r?\n|\r/g, ''),
   );
 
-  // if not match, check if it's start with <lobeArtifact but not closed
-  const regex = /<lobeArtifact\b(?:(?!\/?>)[\s\S])*$/;
+  // if not match, check if it's start with <artifact but not closed
+  const regex = /<artifact\b(?:(?!\/?>)[\s\S])*$/;
   if (regex.test(output)) {
-    output = output.replace(regex, '<lobeArtifact>');
+    output = output.replace(regex, '<artifact>');
   }
 
   // Strip newlines inside the lobeAgents tag so attributes spread across lines
