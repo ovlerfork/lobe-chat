@@ -16,8 +16,7 @@ Upstream is treated as read-only. Local changes are stored as replayable patch f
 
 - `0001-feat-filter-markdown-code-blocks-from-TTS-input.patch` — filter fenced code blocks and heading markers before text-to-speech synthesis.
 - `0002-feat-disable-character-by-character-SSE-smoothing.patch` — flush streamed text/reasoning chunks without character-by-character smoothing.
-- `0003-feat-use-DeepSeek-beta-API-endpoint-by-default.patch` — use `https://api.deepseek.com/beta` as the default DeepSeek OpenAI-compatible endpoint.
-- `0004-feat-use-generic-artifact-and-thinking-tags.patch` — replace Lobe-specific artifact/thinking tag names with generic `artifact` and `thinking` tags.
+- `0003-feat-use-generic-artifact-and-thinking-tags.patch` — replace Lobe-specific artifact/thinking tag names with generic `artifact` and `thinking` tags.
 
 ## Apply locally
 
